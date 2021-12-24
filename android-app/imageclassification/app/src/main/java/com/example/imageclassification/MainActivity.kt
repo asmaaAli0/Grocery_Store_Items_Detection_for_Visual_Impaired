@@ -16,10 +16,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import com.example.imageclassification.ml.General
-import com.example.imageclassification.ml.MobilenetV110224Quant
-import com.example.imageclassification.ml.MobilenetVeges
-import com.example.imageclassification.ml.VegesVgg
+import com.example.imageclassification.ml.*
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -78,7 +75,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         checkandGetpermissions()
 
         // save class names in list of strings
-        val labels = application.assets.open("Veges_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
+        val Primary_labels = application.assets.open("Primary_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
+        val Veg_labels = application.assets.open("Veges_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
+        val Fruit_labels = application.assets.open("Fruit_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
+        val Package_labels = application.assets.open("Package_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
 
         // when user clicks select button
         select_image_button.setOnClickListener(View.OnClickListener {
@@ -97,42 +97,122 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             var resized = Bitmap.createScaledBitmap(bitmap, 224, 224, true)
 
             // the following code is copied from tflite file
-            //val model = MobilenetVeges.newInstance(this)
-            //val model = General.newInstance(this)
-            val model = VegesVgg.newInstance(this)
+            val prim_model = BaseXception.newInstance(this)
 
             // create byte buffer from the resized bitmap
-            // var tbuffer = TensorImage.fromBitmap(resized)
-            // var byteBuffer = tbuffer.
+            var prim_tensorImage = TensorImage(DataType.FLOAT32)
+            prim_tensorImage.load(resized)
+            var prim_byteBuffer = prim_tensorImage.buffer
 
-            var tensorImage = TensorImage(DataType.FLOAT32)
-            tensorImage.load(resized)
-            var byteBuffer = tensorImage.buffer
+            // Creates inputs for reference.
+            val prim_inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
+            prim_inputFeature0.loadBuffer(prim_byteBuffer)
 
-// Creates inputs for reference.
-            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
-            inputFeature0.loadBuffer(byteBuffer)
-
-// Runs model inference and gets result.
-            val outputs = model.process(inputFeature0)
+            // Runs model inference and gets result.
+            val prim_outputs = prim_model.process(prim_inputFeature0)
             // predicted output
-            val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+            val prim_outputFeature0 = prim_outputs.outputFeature0AsTensorBuffer
 
             // get the index of the highest value from output array
-            var max = getMax(outputFeature0.floatArray)
+            var prim_max = getMax(prim_outputFeature0.floatArray,3)
+            //text_view.setText(Primary_labels[prim_max])
 
-            //Log.d("fruit", outputFeature0.floatArray[0].toString())
-            //Log.d("package", outputFeature0.floatArray[1].toString())
-            //Log.d("veges", outputFeature0.floatArray[2].toString())
+            // Releases model resources if no longer used.
+            prim_model.close()
 
-            // get class name of the index from labels.txt
-            // and replace text view with prediction
-             text_view.setText(labels[max])
-            //text_view.setText(outputFeature0.floatArray)
+            // Fruits class
+            if(Primary_labels[prim_max]=="Fruit"){
+                // the following code is copied from tflite file
+                val model = FruitsXception1.newInstance(this)
 
-// Releases model resources if no longer used.
-            model.close()
-            speakOut()
+                // create byte buffer from the resized bitmap
+                var tensorImage = TensorImage(DataType.FLOAT32)
+                tensorImage.load(resized)
+                var byteBuffer = tensorImage.buffer
+
+                // Creates inputs for reference.
+                val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
+                inputFeature0.loadBuffer(byteBuffer)
+
+                // Runs model inference and gets result.
+                val outputs = model.process(inputFeature0)
+                // predicted output
+                val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+
+                // get the index of the highest value from output array
+                var max = getMax(outputFeature0.floatArray,28)
+
+                // get class name of the index from labels.txt
+                // and replace text view with prediction
+                text_view.setText(Fruit_labels[max])
+
+                // Releases model resources if no longer used.
+                model.close()
+                speakOut()
+            }
+            // Packages class
+            else if(Primary_labels[prim_max]=="Packages"){
+                // the following code is copied from tflite file
+                val model = PackagesVgg16.newInstance(this)
+
+                // create byte buffer from the resized bitmap
+                var tensorImage = TensorImage(DataType.FLOAT32)
+                tensorImage.load(resized)
+                var byteBuffer = tensorImage.buffer
+
+                // Creates inputs for reference.
+                val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
+                inputFeature0.loadBuffer(byteBuffer)
+
+                // Runs model inference and gets result.
+                val outputs = model.process(inputFeature0)
+                // predicted output
+                val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+
+                // get the index of the highest value from output array
+                var max = getMax(outputFeature0.floatArray,31)
+
+                // get class name of the index from labels.txt
+                // and replace text view with prediction
+                text_view.setText(Package_labels[max])
+
+                // Releases model resources if no longer used.
+                model.close()
+                speakOut()
+            }
+            // Vegetables class
+            else if (Primary_labels[prim_max]=="Vegetables"){
+                // the following code is copied from tflite file
+                val model = VegesMobilenet2.newInstance(this)
+
+                // create byte buffer from the resized bitmap
+                var tensorImage = TensorImage(DataType.FLOAT32)
+                tensorImage.load(resized)
+                var byteBuffer = tensorImage.buffer
+
+                // Creates inputs for reference.
+                val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
+                inputFeature0.loadBuffer(byteBuffer)
+
+                // Runs model inference and gets result.
+                val outputs = model.process(inputFeature0)
+                // predicted output
+                val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+
+                // get the index of the highest value from output array
+                var max = getMax(outputFeature0.floatArray,22)
+
+                // get class name of the index from labels.txt
+                // and replace text view with prediction
+                text_view.setText(Veg_labels[max])
+
+                // Releases model resources if no longer used.
+                model.close()
+                speakOut()
+            }
+
+            //prim_model.close()
+
         })
 
         // when users clicks on camera button
@@ -167,14 +247,14 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     }
 
-    fun getMax(arr:FloatArray) : Int{
+    fun getMax(arr:FloatArray,label_num:Int) : Int{
         var ind = 0;
         var min = 0.0f;
 
         // iterate over the 1000 label (bec we have 1000 class) and get the index with max value
         // TODO : change number of classes
 
-        for(i in 0..21)
+        for(i in 0..(label_num-1))
         {
             Log.d("loop", i.toString())
             if(arr[i] > min)
@@ -200,4 +280,39 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val text = text_view.text.toString()
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
     }
+
+    /* fun pred(TheModel:Class<*>?){
+        // resize the bitmap to model input shape (check .tflite file)
+        var resized = Bitmap.createScaledBitmap(bitmap, 224, 224, true)
+
+        // the following code is copied from tflite file
+        val veg_model = TheModel.newInstance(this)
+
+        // create byte buffer from the resized bitmap
+        var tensorImage = TensorImage(DataType.FLOAT32)
+        tensorImage.load(resized)
+        var byteBuffer = tensorImage.buffer
+
+        // Creates inputs for reference.
+        val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
+        inputFeature0.loadBuffer(byteBuffer)
+
+        // Runs model inference and gets result.
+        val outputs = veg_model.process(inputFeature0)
+        // predicted output
+        val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+
+        // get the index of the highest value from output array
+        var veg_max = getMax(outputFeature0.floatArray,22)
+
+        // get class name of the index from labels.txt
+        // and replace text view with prediction
+        text_view.setText(Veg_labels[veg_max])
+
+        // Releases model resources if no longer used.
+        veg_model.close()
+        speakOut()
+     }
+     */
+
 }
