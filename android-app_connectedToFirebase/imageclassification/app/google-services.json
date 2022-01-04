@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "973377549590",
+    "firebase_url": "https://gp-iti-default-rtdb.firebaseio.com",
+    "project_id": "gp-iti",
+    "storage_bucket": "gp-iti.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973377549590:android:cc84e3b7c1444cf965cc37",
+        "android_client_info": {
+          "package_name": "com.example.imageclassification"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "973377549590-jk0gvg9o9iafhac4uufglgdantmcjr12.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACbo0xz88lCWh7zXnAfO8gzGZb0AkvbTE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "973377549590-jk0gvg9o9iafhac4uufglgdantmcjr12.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
