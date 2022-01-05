@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.media.AudioManager
+import android.media.MediaPlayer
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -29,8 +31,8 @@ import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.storage.UploadTask
 
 import com.google.android.gms.tasks.OnSuccessListener
-
-
+import java.io.File
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -45,6 +47,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     lateinit var imageUri : Uri
     lateinit var storage: FirebaseStorage
     lateinit var storageRefrence : StorageReference
+    var mediaPlayer : MediaPlayer? = null
 
     // function to camera permission
     public fun checkandGetpermissions(){
@@ -255,7 +258,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             if (data != null) {
                 imageUri = data.getData()!!
                 bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
-                uploadPicture()
+                //uploadPicture()
+                downloadAudio()
             }
 
         }
@@ -269,10 +273,33 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     }
 
+    private fun downloadAudio() {
+        val storageRef = FirebaseStorage.getInstance().reference.child("classes_audios/class_name.wav")
+
+        val localfile = File.createTempFile("tempAudio","wav")
+        storageRef.getFile(localfile).addOnSuccessListener {
+            mediaPlayer = MediaPlayer()
+            mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            try {
+                mediaPlayer!!.setDataSource(localfile.path)
+                mediaPlayer!!.prepare()
+                mediaPlayer!!.start()
+            }catch (e: IOException){
+                e.printStackTrace()
+            }
+            Toast.makeText(this, "Playing Audio", Toast.LENGTH_LONG).show()
+        }
+            .addOnFailureListener{
+                Toast.makeText(this, "failed to retrieve audio", Toast.LENGTH_LONG).show()
+            }
+
+
+    }
+
     private fun uploadPicture() {
 
         val randomKey: String = UUID.randomUUID().toString()
-        val riversRef: StorageReference = storageRefrence.child("images/" + randomKey)
+        val riversRef: StorageReference = storageRefrence.child("images/" +  "image.jpeg")
 
         riversRef.putFile(imageUri)
             .addOnSuccessListener {
