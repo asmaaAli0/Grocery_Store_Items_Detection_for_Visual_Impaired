@@ -25,6 +25,7 @@ import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.util.*
+
 import java.util.jar.Manifest
 import com.google.android.gms.tasks.OnFailureListener
 
@@ -33,6 +34,13 @@ import com.google.firebase.storage.UploadTask
 import com.google.android.gms.tasks.OnSuccessListener
 import java.io.File
 import java.io.IOException
+import java.text.BreakIterator
+import android.media.MediaRecorder
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import java.lang.IllegalStateException
+import android.Manifest.permission.RECORD_AUDIO
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -48,6 +56,12 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     lateinit var storage: FirebaseStorage
     lateinit var storageRefrence : StorageReference
     var mediaPlayer : MediaPlayer? = null
+    var mediaPlayer1 : MediaPlayer? = null
+    protected var recorder: MediaRecorder? = null
+
+
+
+
 
     // function to camera permission
     public fun checkandGetpermissions(){
@@ -57,6 +71,15 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         else{
             Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show()
         }
+
+        if(checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED){
+            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 200)
+        }
+        else{
+            Toast.makeText(this, "Audio permission granted", Toast.LENGTH_SHORT).show()
+        }
+
+
     }
 
     override fun onRequestPermissionsResult(
@@ -74,7 +97,19 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
+
+        if(requestCode == 200){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                Toast.makeText(this, "Audio permission granted", Toast.LENGTH_SHORT).show()
+            }
+            else{
+                Toast.makeText(this, "Microphone Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +126,15 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         storageRefrence = storage.getReference()
 
 
+/*
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            val permissions = arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            ActivityCompat.requestPermissions(this, permissions,0)
+        }
+
+ */
         // handling permissions
         checkandGetpermissions()
 
@@ -258,8 +302,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             if (data != null) {
                 imageUri = data.getData()!!
                 bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
-                //uploadPicture()
+                uploadPicture()
+                Thread.sleep(8_000)
                 downloadAudio()
+
             }
 
         }
@@ -274,27 +320,61 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun downloadAudio() {
-        val storageRef = FirebaseStorage.getInstance().reference.child("classes_audios/class_name.wav")
 
-        val localfile = File.createTempFile("tempAudio","wav")
-        storageRef.getFile(localfile).addOnSuccessListener {
-            mediaPlayer = MediaPlayer()
-            mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
-            try {
-                mediaPlayer!!.setDataSource(localfile.path)
-                mediaPlayer!!.prepare()
-                mediaPlayer!!.start()
-            }catch (e: IOException){
-                e.printStackTrace()
-            }
-            Toast.makeText(this, "Playing Audio", Toast.LENGTH_LONG).show()
-        }
-            .addOnFailureListener{
-                Toast.makeText(this, "failed to retrieve audio", Toast.LENGTH_LONG).show()
-            }
+            val storageRef = FirebaseStorage.getInstance().reference.child("classes_audios/class_name.wav")
+            val localfile = File.createTempFile("tempAudio","wav")
+            //Log.d("file", localfile.path.toString())
+            //Log.d("msg", localfile.length().toString())
+
+            //var flag ="not yet"
+
+                storageRef.getFile(localfile).addOnSuccessListener {
+                    mediaPlayer = MediaPlayer()
+                        mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+                        try {
+                            mediaPlayer!!.setDataSource(localfile.path)
+                            mediaPlayer!!.prepare()
+                            mediaPlayer!!.start()
+                //            flag = "sucess"
+                            Log.d("msg1","abl el sleep")
+                            Thread.sleep(2_000)
+                            Log.d("msg2","ba3ddd el sleep")
+                            mediaPlayer1 = MediaPlayer()
+                            mediaPlayer1!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+                            val audio = getAssets().openFd("download.wav")
+                            mediaPlayer1!!.setDataSource(audio.getFileDescriptor(),audio.getStartOffset(),audio.getLength())
+                            //mediaPlayer!!.setDataSource(audio)
+                            mediaPlayer1!!.prepare()
+                            mediaPlayer1!!.start()
+                            Log.d("msg3","ba3d el gomla el sabta")
+
+                            startRecording("description.wav")
+                            Log.d("msg4","ba3d el recording")
+                        }catch (e: IOException){
+                            e.printStackTrace()
+                        }
+                        Toast.makeText(this, "Playing Audio", Toast.LENGTH_LONG).show()
+
+                }
+
+                //if (flag=="sucess"){break}
+
+
+                    .addOnFailureListener{
+                        Toast.makeText(this, "failed to retrieve audio", Toast.LENGTH_LONG).show()
+
+                    }
+
+
+
+
+
+        //Log.d("out","out of while")
+
 
 
     }
+
 
     private fun uploadPicture() {
 
@@ -310,6 +390,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 // ...
             }
     }
+
 
     fun getMax(arr:FloatArray,label_num:Int) : Int{
         var ind = 0;
@@ -343,6 +424,33 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun speakOut(){
         val text = text_view.text.toString()
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
+    }
+
+    private fun startRecording(fileName: String) {
+        // initialize and configure MediaRecorder
+        recorder = MediaRecorder()
+        recorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
+        recorder!!.setOutputFile(fileName)
+        //recorder!!.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+        //recorder!!.setOutputFormat(MediaRecorder.OutputFormat.
+        recorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+        try {
+            recorder!!.prepare()
+        } catch (e: IOException) {
+            // handle error
+        } catch (e: IllegalStateException) {
+            // handle error
+        }
+        recorder!!.start()
+        Thread.sleep(3_000)
+        stopRecording()
+    }
+
+    private fun stopRecording() {
+        // stop recording and free up resources
+        recorder!!.stop()
+        recorder!!.release()
+        recorder = null
     }
 
     /* fun pred(TheModel:Class<*>?){
