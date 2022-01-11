@@ -5,6 +5,7 @@
       <map>
         <entry key="..\:/AI_Pro/GraduationProject/android_app_example/imageclassification/app/src/main/res/layout/activity_main.xml" value="0.22" />
         <entry key="..\:/ITI-Pro/Graduation Project/new android/Grocery_Store_Items_Detection_for_Visual_Impaired-main/android-app/imageclassification/app/src/main/res/layout/activity_main.xml" value="0.2463768115942029" />
+        <entry key="..\:/ITI-Pro/Graduation Project/new android/git_repo/android-app_connectedToFirebase/imageclassification/app/src/main/res/layout/activity_main.xml" value="0.25416666666666665" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.5" />
       </map>
     </option>
@@ -14,5 +15,12 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.25416666666666665" />
+      </ProjectState>
+    </option>
   </component>
 </project>
