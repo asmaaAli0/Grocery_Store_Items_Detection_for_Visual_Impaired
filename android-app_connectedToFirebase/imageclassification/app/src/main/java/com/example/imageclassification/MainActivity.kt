@@ -41,6 +41,7 @@ import androidx.core.content.ContextCompat
 import java.lang.IllegalStateException
 import android.Manifest.permission.RECORD_AUDIO
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.os.Environment
 
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -58,6 +59,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     var mediaPlayer : MediaPlayer? = null
     var mediaPlayer1 : MediaPlayer? = null
     protected var recorder: MediaRecorder? = null
+    private var recFileName: String = ""
+    private var player: MediaPlayer? = null
 
 
 
@@ -77,6 +80,12 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
         else{
             Toast.makeText(this, "Audio permission granted", Toast.LENGTH_SHORT).show()
+        }
+        if(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED){
+            requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), 300)
+        }
+        else{
+            Toast.makeText(this, "Storage permission granted", Toast.LENGTH_SHORT).show()
         }
 
 
@@ -107,6 +116,15 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 Toast.makeText(this, "Microphone Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
+        if(requestCode == 300){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                Toast.makeText(this, "Storage permission granted", Toast.LENGTH_SHORT).show()
+            }
+            else{
+                Toast.makeText(this, "Storage Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
 
@@ -124,6 +142,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         // Connecting to firebase
         storage = FirebaseStorage.getInstance()
         storageRefrence = storage.getReference()
+
+        recFileName = "${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
 
 
 /*
@@ -157,6 +177,9 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         // when user clicks on predict button
         make_prediction.setOnClickListener(View.OnClickListener {
+            //startRecording(Environment.getExternalStorageDirectory().toString()+"/myrec.3gp")
+            startRecording(recFileName)
+            /*
             // resize the bitmap to model input shape (check .tflite file)
             var resized = Bitmap.createScaledBitmap(bitmap, 224, 224, true)
 
@@ -276,6 +299,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             }
 
             //prim_model.close()
+
+             */
 
         })
 
@@ -431,9 +456,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         recorder = MediaRecorder()
         recorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
         recorder!!.setOutputFile(fileName)
-        //recorder!!.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+
+        recorder!!.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
         //recorder!!.setOutputFormat(MediaRecorder.OutputFormat.
-        recorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+        //recorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+        recorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
         try {
             recorder!!.prepare()
         } catch (e: IOException) {
@@ -442,6 +469,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             // handle error
         }
         recorder!!.start()
+        Toast.makeText(this, "recording", Toast.LENGTH_SHORT).show()
         Thread.sleep(3_000)
         stopRecording()
     }
@@ -451,6 +479,24 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         recorder!!.stop()
         recorder!!.release()
         recorder = null
+        Toast.makeText(this, "record stopped", Toast.LENGTH_SHORT).show()
+        startPlay()
+    }
+
+    private fun startPlay() {
+        player = MediaPlayer().apply {
+            try{
+                setDataSource(recFileName)
+                prepare()
+                start()
+
+            }catch (e: IOException){
+                Log.e("err", "Prepare audio failed")
+            }
+
+        }
+        Toast.makeText(this, "playing record", Toast.LENGTH_SHORT).show()
+
     }
 
     /* fun pred(TheModel:Class<*>?){
@@ -488,3 +534,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
      */
 
 }
+
+
+
+
