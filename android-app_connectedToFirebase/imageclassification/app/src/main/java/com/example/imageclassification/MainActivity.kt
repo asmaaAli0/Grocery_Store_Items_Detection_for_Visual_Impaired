@@ -39,6 +39,7 @@ import android.Manifest.permission.RECORD_AUDIO
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.os.Environment
 import android.widget.*
+import java.io.ByteArrayOutputStream
 
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -132,22 +133,33 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
         // if user captured image
         else if(requestCode == 200 && resultCode == Activity.RESULT_OK){
-            img_view.setImageURI(data?.data)
-            if (data != null) {
+            /*
                 Log.d("mm","gowa el if")
                 // save the captured image in bitmap to use in predicting
-                //bitmap = data?.extras?.get("data") as Bitmap
+                bitmap = data?.extras?.get("data") as Bitmap
                 // show the captured image in the img view
-                imageUri = data.getExtras()?.get("data") as Uri
-                //imageUri = data.getData()!!
-                bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
-                //img_view.setImageBitmap(bitmap)
+                img_view.setImageBitmap(bitmap)
 
-                predict()
-            }
+                //predict()
+
+             */
+            bitmap = data?.extras?.get("data") as Bitmap
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+            val byteimg = stream.toByteArray();
+            uploadCapturedImg(byteimg)
+
         }
 
     }
+
+    private fun uploadCapturedImg(byteimg: ByteArray) {
+        val riversRef: StorageReference = storageRefrence.child("images/" +  "captured.jpeg")
+
+        riversRef.putBytes(byteimg)
+    }
+
+
     private fun predict() {
         uploadPicture()
         Thread.sleep(8_000)
