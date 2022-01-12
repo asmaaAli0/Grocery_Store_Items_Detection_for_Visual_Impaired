@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        welcomeAudio()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -95,6 +96,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
 
     }
+
 
     // when user selects an image, change the img view to this image
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -213,6 +215,21 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 Toast.makeText(this, "failed to retrieve description", Toast.LENGTH_LONG).show()
             }
     }
+
+    private fun welcomeAudio() {
+            try {
+                mediaPlayer1 = MediaPlayer()
+                mediaPlayer1!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+                val audio = getAssets().openFd("welcome-audio2.wav")
+                mediaPlayer1!!.setDataSource(audio.getFileDescriptor(),audio.getStartOffset(),audio.getLength())
+                mediaPlayer1!!.prepare()
+                mediaPlayer1!!.start()
+                Log.d("audio","playing audio")
+                Toast.makeText(this, "playing welcome audio", Toast.LENGTH_LONG).show()
+            }catch (e: IOException){
+                e.printStackTrace() }
+    }
+
 
     private fun hearDescription(){
         Thread.sleep(2_000)
