@@ -1,4 +1,4 @@
-package com.example.imageclassification
+package com.example.SuperEye
 
 import android.app.Activity
 import android.content.Intent
@@ -9,35 +9,20 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.provider.MediaStore
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
-import com.example.imageclassification.ml.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import org.tensorflow.lite.DataType
-import org.tensorflow.lite.support.image.TensorImage
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.util.*
 
-import java.util.jar.Manifest
-import com.google.android.gms.tasks.OnFailureListener
-
-import com.google.firebase.storage.UploadTask
-
-import com.google.android.gms.tasks.OnSuccessListener
 import java.io.File
 import java.io.IOException
-import java.text.BreakIterator
 import android.media.MediaRecorder
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.lang.IllegalStateException
-import android.Manifest.permission.RECORD_AUDIO
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.os.Environment
 import android.widget.*
 import java.io.ByteArrayOutputStream
 
@@ -126,6 +111,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                 imageUri = data.getData()!!
                 bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
+                uploadPicture()
                 predict()
 
             }
@@ -144,10 +130,13 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
              */
             bitmap = data?.extras?.get("data") as Bitmap
+            img_view.setImageBitmap(bitmap)
             val stream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
             val byteimg = stream.toByteArray();
             uploadCapturedImg(byteimg)
+            predict()
+
 
         }
 
@@ -161,49 +150,49 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
 
     private fun predict() {
-        uploadPicture()
         Thread.sleep(8_000)
-        downloadAudio()
+        downloadAudio(classesaudio)
+        hearDescription()
         startRecording()
         uploadAudio()
+        Thread.sleep(8_000)
+        downloadAudio(descriptionaudio)
+
+
     }
+    val descriptionaudio= "description_audios/product_decription.wav"
+    val classesaudio= "classes_audios/class_name.wav"
 
-    private fun downloadAudio() {
+    private fun downloadAudio(path:String) {
 
-            val storageRef = FirebaseStorage.getInstance().reference.child("classes_audios/class_name.wav")
-            val localfile = File.createTempFile("tempAudio","wav")
+        val storageRef = FirebaseStorage.getInstance().reference.child(path)
+        val localfile = File.createTempFile("tempAudio","wav")
 
-                storageRef.getFile(localfile).addOnSuccessListener {
-                    mediaPlayer = MediaPlayer()
-                        mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
-                        try {
-                            mediaPlayer!!.setDataSource(localfile.path)
-                            mediaPlayer!!.prepare()
-                            mediaPlayer!!.start()
-                            Thread.sleep(2_000)
-                            mediaPlayer1 = MediaPlayer()
-                            mediaPlayer1!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
-                            val audio = getAssets().openFd("download.wav")
-                            mediaPlayer1!!.setDataSource(audio.getFileDescriptor(),audio.getStartOffset(),audio.getLength())
-                            mediaPlayer1!!.prepare()
-                            mediaPlayer1!!.start()
-
-                            //startRecording(recFileName)
-                            //uploadAudio()
-
-                        }catch (e: IOException){
-                            e.printStackTrace()
-                        }
-                        //Toast.makeText(this, "Playing Audio", Toast.LENGTH_LONG).show()
-
-                }
-
-                    .addOnFailureListener{
-                        Toast.makeText(this, "failed to retrieve audio", Toast.LENGTH_LONG).show()
-
-                    }
-
-
+        storageRef.getFile(localfile).addOnSuccessListener {
+            mediaPlayer = MediaPlayer()
+            mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            try {
+                mediaPlayer!!.setDataSource(localfile.path)
+                mediaPlayer!!.prepare()
+                mediaPlayer!!.start()
+            }catch (e: IOException){
+                e.printStackTrace() }
+            //Toast.makeText(this, "Playing Audio", Toast.LENGTH_LONG).show()
+        }
+            .addOnFailureListener{
+                Toast.makeText(this, "failed to retrieve audio", Toast.LENGTH_LONG).show()
+            }
+    }
+    private fun hearDescription(){
+        Thread.sleep(2_000)
+        mediaPlayer1 = MediaPlayer()
+        mediaPlayer1!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+        val audio = getAssets().openFd("download.wav")
+        mediaPlayer1!!.setDataSource(audio.getFileDescriptor(),audio.getStartOffset(),audio.getLength())
+        mediaPlayer1!!.prepare()
+        mediaPlayer1!!.start()
+        //startRecording(recFileName)
+        //uploadAudio()
     }
 
 
@@ -263,25 +252,23 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         //startPlay()
     }
 
-   /* private fun startPlay() {
-        player = MediaPlayer().apply {
-            try{
-                setDataSource(recFileName)
-                prepare()
-                start()
+    /* private fun startPlay() {
+         player = MediaPlayer().apply {
+             try{
+                 setDataSource(recFileName)
+                 prepare()
+                 start()
 
-            }catch (e: IOException){
-                Log.e("err", "Prepare audio failed")
-            }
+             }catch (e: IOException){
+                 Log.e("err", "Prepare audio failed")
+             }
 
-        }
-        Toast.makeText(this, "playing record", Toast.LENGTH_SHORT).show()
+         }
+         Toast.makeText(this, "playing record", Toast.LENGTH_SHORT).show()
 
-    } */
+     } */
 
 
 }
-
-
 
 

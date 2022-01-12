@@ -1,4 +1,4 @@
-package com.example.imageclassification
+package com.example.SuperEye
 
 import org.junit.Test
 

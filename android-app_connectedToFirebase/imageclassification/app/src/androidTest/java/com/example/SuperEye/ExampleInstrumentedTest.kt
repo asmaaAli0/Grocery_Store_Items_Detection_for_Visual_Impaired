@@ -1,4 +1,4 @@
-package com.example.imageclassification
+package com.example.SuperEye
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
