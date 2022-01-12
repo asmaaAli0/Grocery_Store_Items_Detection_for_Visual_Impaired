@@ -158,17 +158,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
 
     }
-   /* suspend fun predictt() {
-        Thread.sleep(8_000)
-        downloadAudio_className(classesaudio)
-        //hearDescription()
-        //startRecording()
-        //uploadAudio()
-        //Thread.sleep(8_000)
-        //downloadAudio_description(descriptionaudio)
 
-
-    } */
     val descriptionaudio= "description_audios/product_decription.wav"
     val classesaudio= "classes_audios/class_name.wav"
 
@@ -290,10 +280,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         recorder!!.release()
         recorder = null
         Toast.makeText(this, "record stopped", Toast.LENGTH_SHORT).show()
-        startPlay()
+        //startPlay()
         uploadAudio()
     }
-
+/*
     private fun startPlay() {
          player = MediaPlayer().apply {
              try{
@@ -309,7 +299,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
          Toast.makeText(this, "playing record", Toast.LENGTH_SHORT).show()
 
      }
-
+*/
 
 }
 
