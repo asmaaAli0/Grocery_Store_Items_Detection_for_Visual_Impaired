@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         storage = FirebaseStorage.getInstance()
         storageRefrence = storage.getReference()
 
-        recFileName = "${externalCacheDir?.absolutePath}/response.wav"
+        recFileName = "${externalCacheDir?.absolutePath}/response.mp3"
 
         // handling permissions
 
@@ -158,11 +158,22 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
 
     }
+   /* suspend fun predictt() {
+        Thread.sleep(8_000)
+        downloadAudio_className(classesaudio)
+        //hearDescription()
+        //startRecording()
+        //uploadAudio()
+        //Thread.sleep(8_000)
+        //downloadAudio_description(descriptionaudio)
+
+
+    } */
     val descriptionaudio= "description_audios/product_decription.wav"
     val classesaudio= "classes_audios/class_name.wav"
 
     private fun downloadAudio_className(path:String) {
-        Thread.sleep(8_000)
+        Thread.sleep(10_000)
         val storageRef = FirebaseStorage.getInstance().reference.child(path)
         val localfile = File.createTempFile("tempAudio","wav")
 
@@ -180,7 +191,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 mediaPlayer1!!.setDataSource(audio.getFileDescriptor(),audio.getStartOffset(),audio.getLength())
                 mediaPlayer1!!.prepare()
                 mediaPlayer1!!.start()
-                Thread.sleep(4_000)
+                Thread.sleep(6_000)
                 startRecording()
             }catch (e: IOException){
                 e.printStackTrace() }
@@ -192,6 +203,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun downloadAudio_description(path:String) {
+        Thread.sleep(30_000)
 
         val storageRef = FirebaseStorage.getInstance().reference.child(path)
         val localfile = File.createTempFile("tempAudio","wav")
@@ -236,7 +248,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun uploadAudio() {
 
         //val randomKey: String = UUID.randomUUID().toString()
-        val riversRef: StorageReference = storageRefrence.child("user_response/" +  "response.wav")
+        val riversRef: StorageReference = storageRefrence.child("user_response/" +  "response.mp3")
         audioUri = Uri.fromFile(File(recFileName))
 
         riversRef.putFile(audioUri)
@@ -257,8 +269,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         recorder = MediaRecorder()
         recorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
         recorder!!.setOutputFile(recFileName)
-        recorder!!.setOutputFormat(MediaRecorder.OutputFormat.OGG)
-        recorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+        recorder!!.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+        recorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         try {
             recorder!!.prepare()
         } catch (e: IOException) {
