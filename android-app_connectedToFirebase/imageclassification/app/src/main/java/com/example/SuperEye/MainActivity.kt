@@ -220,7 +220,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             try {
                 mediaPlayer1 = MediaPlayer()
                 mediaPlayer1!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
-                val audio = getAssets().openFd("welcome-audio2.wav")
+                val audio = getAssets().openFd("welcome_camera.wav")
                 mediaPlayer1!!.setDataSource(audio.getFileDescriptor(),audio.getStartOffset(),audio.getLength())
                 mediaPlayer1!!.prepare()
                 mediaPlayer1!!.start()
