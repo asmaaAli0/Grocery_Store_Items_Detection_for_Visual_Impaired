@@ -2,33 +2,23 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
+    android:id="@+id/cam_btn"
+    android:layout_width="wrap_content"
     android:layout_height="match_parent"
+    android:layout_gravity="center_horizontal"
     tools:context=".MainActivity">
 
     <ImageView
         android:id="@+id/imageView2"
-        android:layout_width="373dp"
-        android:layout_height="329dp"
+        android:layout_width="158dp"
+        android:layout_height="143dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.421"
+        app:layout_constraintHorizontal_bias="0.937"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.039"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
+        app:layout_constraintVertical_bias="0.636"
         tools:srcCompat="@tools:sample/avatars" />
-
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#03A9F4"
-        android:text="make prediction"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.673" />
 
     <Button
         android:id="@+id/button"
@@ -37,35 +27,35 @@
         android:backgroundTint="#009688"
         android:text="select image"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.108"
+        app:layout_constraintEnd_toStartOf="@+id/imageView2"
+        app:layout_constraintHorizontal_bias="0.36"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.584" />
+        app:layout_constraintTop_toBottomOf="@+id/imageButton"
+        app:layout_constraintVertical_bias="0.223" />
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="313dp"
-        android:layout_height="131dp"
-        android:text="select image and press predict button"
+        android:layout_width="174dp"
+        android:layout_height="89dp"
+        android:layout_marginEnd="36dp"
+        android:text=""
         android:textColor="#100F0F"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageView2"
+        app:layout_constraintTop_toBottomOf="@+id/button"
+        app:layout_constraintVertical_bias="0.452" />
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="403dp"
+        android:layout_height="476dp"
+        android:background="@null"
+        android:scaleX="0.95"
+        android:scaleY="0.95"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.913" />
-
-    <Button
-        android:id="@+id/camerabtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="52dp"
-        android:backgroundTint="#009688"
-        android:text="Camera"
-        app:layout_constraintBottom_toBottomOf="@+id/button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/button"
-        app:layout_constraintVertical_bias="0.0" />
+        app:srcCompat="@drawable/eye"
+        tools:layout_editor_absoluteY="55dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
