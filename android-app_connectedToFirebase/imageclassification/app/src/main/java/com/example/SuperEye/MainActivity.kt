@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun uploadCapturedImg(byteimg: ByteArray) {
-        val riversRef: StorageReference = storageRefrence.child("images/" +  "captured.jpeg")
+        val riversRef: StorageReference = storageRefrence.child("images/" +  "image.jpeg")
 
         riversRef.putBytes(byteimg)
     }
