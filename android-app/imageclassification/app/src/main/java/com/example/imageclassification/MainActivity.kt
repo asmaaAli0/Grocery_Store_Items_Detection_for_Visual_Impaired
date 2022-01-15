@@ -1,6 +1,5 @@
 package com.example.imageclassification
 
-import android.R.attr
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,9 +9,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.provider.MediaStore
-import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
@@ -25,10 +22,12 @@ import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.IOException
 import java.util.*
-import java.util.jar.Manifest
-import android.R.attr.data
-
-
+import android.content.ActivityNotFoundException
+import android.text.Editable
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -40,11 +39,14 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     lateinit var cameraimgbtn : ImageButton
     lateinit var tts: TextToSpeech
     lateinit var tts1: TextToSpeech
+    lateinit var tts2: TextToSpeech
+    lateinit var tts0: TextToSpeech
+    lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+
+    public var desc: String =""
 
     var mediaPlayer1 : MediaPlayer? = null
     lateinit var speechRecognizer : SpeechRecognizer
-    var mic = 0; // mic off
-
 
     // function to camera permission
     public fun checkandGetpermissions(){
@@ -91,19 +93,21 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         welcomeAudio()
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         select_image_button = findViewById(R.id.button)
-
         img_view = findViewById(R.id.imageView2)
         text_view = findViewById(R.id.textView)
         cameraimgbtn = findViewById<ImageButton>(R.id.imageButton)
         tts = TextToSpeech(this, this)
         tts1 = TextToSpeech(this, this)
+        tts2 = TextToSpeech(this, this)
+        tts0 = TextToSpeech(this, this)
+
+        //tts0.speak("Welcome to SuperEye. Press anywhere to open the camera.", TextToSpeech.QUEUE_FLUSH, null, "")
 
         // handling permissions
         checkandGetpermissions()
@@ -119,14 +123,22 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             startActivityForResult(intent, 250)
         })
 
-
         // when users clicks on camera button
         cameraimgbtn.setOnClickListener(View.OnClickListener {
             var camera : Intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
             startActivityForResult(camera, 200)
         })
 
-
+        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ result: ActivityResult? ->
+            if (result!!.resultCode == RESULT_OK && result!!.data != null){
+                val speechtext = result!!.data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<Editable>
+                Log.d("speec:", speechtext[0].toString())
+                if(speechtext[0].toString() == "yes"){
+                    Log.d("yaay", desc)
+                    tts2.speak(desc, TextToSpeech.QUEUE_FLUSH, null, "")
+                }
+            }
+        }
     }
 
     // when user selects an image, change the img view to this image
@@ -152,30 +164,26 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             predict()
         }
 
-        /*
-        when (requestCode) {
-            10 -> if (resultCode == RESULT_OK && data != null)
-            {
-                val result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                result?.get(0)?.let { Log.d("rec:", it) }
-            }
-        }
-
-         */
 
     }
 
     private fun predict() {
-        // save class names in list of strings
+        // save classes names in list of strings
         val Primary_labels = application.assets.open("Primary_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
         val Veg_labels = application.assets.open("Veges_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
         val Fruit_labels = application.assets.open("Fruit_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
         val Package_labels = application.assets.open("Package_Labels.txt").bufferedReader().use { it.readText() }.split("\n")
 
+        // save classes description in list of strings
+        val Veg_descriptions = application.assets.open("Veges_Description.txt").bufferedReader().use { it.readText() }.split("\n")
+        val Fruit_descriptions  = application.assets.open("Fruit_Description.txt").bufferedReader().use { it.readText() }.split("\n")
+        val Package_descriptions  = application.assets.open("Package_Description.txt").bufferedReader().use { it.readText() }.split("\n")
+
+
         var resized = Bitmap.createScaledBitmap(bitmap, 224, 224, true)
 
         // the following code is copied from tflite file
-        val prim_model = BaseXception.newInstance(this)
+        val prim_model = BaseModelVgg.newInstance(this)
 
         // create byte buffer from the resized bitmap
         var prim_tensorImage = TensorImage(DataType.FLOAT32)
@@ -199,9 +207,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         prim_model.close()
 
         // Fruits class
-        if(Primary_labels[prim_max]=="Fruit"){
-            // the following code is copied from tflite file
-            val model = FruitsXception1.newInstance(this)
+        if(prim_max == 0){
+            val model = FruitsVgg.newInstance(this)
 
             // create byte buffer from the resized bitmap
             var tensorImage = TensorImage(DataType.FLOAT32)
@@ -227,14 +234,14 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             // Releases model resources if no longer used.
             model.close()
             speakOut()
-            Thread.sleep(1000)
-            //tts1.speak("Do you want to hear the full product description?", TextToSpeech.QUEUE_FLUSH, null, "")
-            //Describe()
-            //getSpeechInput()
+            //Thread.sleep(1000)
+            tts1.speak("Do you want to hear the full product description?", TextToSpeech.QUEUE_FLUSH, null, "")
+            //Thread.sleep(3500)
+            desc = Fruit_descriptions[max]
+            Describe()
         }
         // Packages class
-        else if(Primary_labels[prim_max]=="Packages"){
-            // the following code is copied from tflite file
+        else if(prim_max == 1){
             val model = PackagesVgg16.newInstance(this)
 
             // create byte buffer from the resized bitmap
@@ -261,15 +268,15 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             // Releases model resources if no longer used.
             model.close()
             speakOut()
-            Thread.sleep(1000)
-            //tts1.speak("Do you want to hear the full product description?", TextToSpeech.QUEUE_FLUSH, null, "")
-            //Describe()
-            //getSpeechInput()
+            //Thread.sleep(1000)
+            tts1.speak("Do you want to hear the full product description?", TextToSpeech.QUEUE_FLUSH, null, "")
+            //Thread.sleep(3500)
+            desc = Package_descriptions[max]
+            Describe()
         }
         // Vegetables class
-        else if (Primary_labels[prim_max]=="Vegetables"){
-            // the following code is copied from tflite file
-            val model = VegesMobilenet2.newInstance(this)
+        else if (prim_max == 2){
+            val model = VegesVgg.newInstance(this)
 
             // create byte buffer from the resized bitmap
             var tensorImage = TensorImage(DataType.FLOAT32)
@@ -296,9 +303,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             model.close()
             speakOut()
             //Thread.sleep(1000)
-            //tts1.speak("Do you want to hear the full product description?", TextToSpeech.QUEUE_FLUSH, null, "")
-            //Describe()
-            //getSpeechInput()
+            tts1.speak("Do you want to hear the full product description?", TextToSpeech.QUEUE_FLUSH, null, "")
+            //Thread.sleep(3500)
+            desc = Veg_descriptions[max]
+            Describe()
+
         }
     }
 
@@ -306,22 +315,16 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         var ind = 0;
         var min = 0.0f;
 
-        // iterate over the 1000 label (bec we have 1000 class) and get the index with max value
-        // TODO : change number of classes
-
+        // iterate over the classes labels and get the index with max value
         for(i in 0..(label_num-1))
         {
             Log.d("loop", i.toString())
             if(arr[i] > min)
             {
-                Log.d("hi","in if")
-                Log.d("index", i.toString())
                 min = arr[i]
                 ind = i;
-                Log.d("min", min.toString())
             }
         }
-        Log.d("out", ind.toString())
         return ind
     }
 
@@ -334,63 +337,28 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun speakOut(){
         val text = text_view.text.toString()
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
-
-
+        Thread.sleep(1000)
     }
-    /*
+
     private fun Describe() {
+        Thread.sleep(3500)
+        val rec_intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        rec_intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        rec_intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,Locale.getDefault())
+        rec_intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "recording..")
 
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        var recognizerIntent : Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "US-en")
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-
-        speechRecognizer.startListening(recognizerIntent)
-        Thread.sleep(3000)
-        speechRecognizer.stopListening()
-
-        startActivityForResult(intent, 10)
-
-
-        //onResults()
-
-    }
-
-     */
-
-    /*
-    private fun getSpeechInput()
-    {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        intent.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-        )
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,
-            Locale.getDefault())
-
-        if (intent.resolveActivity(packageManager) != null)
-        {
-            startActivityForResult(intent, 10)
-        } else
-        {
-            Toast.makeText(this,
-                "Your Device Doesn't Support Speech Input",
-                Toast.LENGTH_SHORT)
-                .show()
+        try {
+            activityResultLauncher.launch(rec_intent)
+        }catch (exp:ActivityNotFoundException){
+            Toast.makeText(applicationContext, "Device does not support recording", Toast.LENGTH_SHORT).show()
         }
+
     }
-
-     */
-
-
 
 
     private fun welcomeAudio() {
+        //tts0.speak("Welcome to SuperEye. Press anywhere to open the camera.", TextToSpeech.QUEUE_FLUSH, null, "")
+
         try {
             mediaPlayer1 = MediaPlayer()
             mediaPlayer1!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
@@ -402,18 +370,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             Toast.makeText(this, "playing welcome audio", Toast.LENGTH_LONG).show()
         }catch (e: IOException){
             e.printStackTrace() }
+
+
     }
-
-
-
-    /*
-    fun onResults(bundle: Bundle) {
-        val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-        Log.d("record:", data.toString())
-    }
-
-     */
-
-
 
 }
